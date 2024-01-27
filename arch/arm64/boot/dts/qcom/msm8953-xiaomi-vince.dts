@@ -125,8 +125,6 @@
 };
 
 &i2c_3 {
-	status = "disabled";
-
 	touchscreen@62 {
 		compatible = "novatek,nt36525-i2c";
 		reg = <0x62>;
@@ -138,6 +136,8 @@
 		vdd-supply = <&pm8953_l10>;
 
 		reset-gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
+
+		status = "disabled";
 	};
 };
 
