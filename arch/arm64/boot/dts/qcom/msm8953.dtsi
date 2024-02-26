@@ -1139,6 +1139,20 @@
 				bias-disable;
 			};
 
+			blsp2_uart0_default: blsp2-uart0-default-state {
+				pins = "gpio16", "gpio17", "gpio18", "gpio19";
+				function = "blsp_uart5";
+				drive-strength = <16>;
+				bias-disable;
+			};
+
+			blsp2_uart0_sleep: blsp2-uart0-sleep-state {
+				pins = "gpio16", "gpio17", "gpio18", "gpio19";
+				function = "gpio";
+				drive-strength = <2>;
+				bias-disable;
+			};
+
 			sdc1_clk_on: sdc1-clk-on-state {
 				pins = "sdc1_clk";
 				bias-disable;
@@ -2599,6 +2613,22 @@
 			qcom,ee = <0>;
 			qcom,num-ees = <4>;
 			qcom,controlled-remotely;
+		};
+
+		blsp2_uart0: serial@7aef000 {
+			compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
+			reg = <0x07aef000 0x200>;
+			interrupts = <GIC_SPI 306 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&gcc GCC_BLSP2_UART1_APPS_CLK>, <&gcc GCC_BLSP2_AHB_CLK>;
+			clock-names = "core", "iface";
+			dmas = <&blsp2_dma 0>, <&blsp2_dma 1>;
+			dma-names = "tx", "rx";
+
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&blsp2_uart0_default>;
+			pinctrl-1 = <&blsp2_uart0_sleep>;
+
+			status = "disabled";
 		};
 
 		i2c_5: i2c@7af5000 {
