@@ -678,7 +678,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
 		.hw_restart_disconnect = false,
 		.use_fw_tx_credits = true,
 		.delay_unmap_buffer = false,
-		.mcast_frame_registration = false,
 	},
 	{
 		.id = QCA4019_HW_1_0_DEV_VERSION,
