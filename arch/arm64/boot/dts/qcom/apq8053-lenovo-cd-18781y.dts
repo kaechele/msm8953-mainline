@@ -60,18 +60,34 @@
 		};
 	};
 
-	panel_vdd: panel-vdd-regulator {
+	panel_avdd: panel-avdd-regulator {
 		compatible = "regulator-fixed";
-		regulator-name = "panel-vdd-regulator";
+		regulator-name = "panel_avdd";
+
 		gpio = <&tlmm 100 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vph_pwr>;
+	};
+
+	/* Speaker amp supplied from 20V DC input */
+	speaker_amp_pvdd: speaker-amp-pvdd-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "speaker_amp_pvdd";
+
+		regulator-min-microvolt = <20000000>;
+		regulator-max-microvolt = <20000000>;
+
+		gpio = <&tlmm 68 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 	};
 
-	speaker_amp_pvdd: speaker-amp-pvdd {
+	wlan_3v3: wlan-3v3-regulator {
 		compatible = "regulator-fixed";
-		regulator-name = "speaker_amp_pvdd";
-		regulator-always-on;
-		regulator-boot-on;
+		regulator-name = "wlan_3v3";
+
+		gpio = <&tlmm 77 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vph_pwr>;
 	};
 
 	vph_pwr: vph-pwr-regulator {
@@ -121,7 +137,7 @@
 		reset-gpios = <&tlmm 61 GPIO_ACTIVE_LOW>;
 		backlight-gpios = <&tlmm 95 GPIO_ACTIVE_HIGH>;
 
-		vdd-supply = <&panel_vdd>;
+		avdd-supply = <&panel_avdd>;
 		vsp-supply = <&lab_vreg>;
 		vsn-supply = <&ibb_vreg>;
 
@@ -162,10 +178,10 @@
 		compatible = "ti,tas5782m";
 		reg = <0x49>;
 
-		pinctrl-0 = <&speaker_amp_default>;
-		pinctrl-names = "default";
-
-		pdn-gpios = <&tlmm 68 GPIO_ACTIVE_HIGH>;
+		pdn-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+		/* The next two GPIOs are connected but unused by the driver */
+		mute-gpio = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+		fault-gpio = <&tlmm 45 GPIO_ACTIVE_HIGH>;
 		pvdd-supply = <&speaker_amp_pvdd>;
 
 		sound-name-prefix = "Speaker";
@@ -293,7 +309,7 @@
 &wcd_codec {
 	vdd-cdc-io-supply = <&pm8953_l5>;
 	vdd-cdc-tx-rx-cx-supply = <&pm8953_s4>;
-	vdd-micbias-supply = <&pm8953_l13>;
+	vdd-micbias-supply = <&vph_pwr>;
 
 	qcom,micbias1-ext-cap;
 
@@ -427,6 +443,7 @@
 	};
 };
 
+/* eMMC */
 &sdhc_1 {
 	vmmc-supply = <&pm8953_l8>;
 	vqmmc-supply = <&pm8953_l5>;
@@ -434,6 +451,7 @@
 	status = "okay";
 };
 
+/* Connected to WCBN3510A SDIO WiFi card */
 &sdhc_2 {
 	vmmc-supply = <&pm8953_l11>;
 	vqmmc-supply = <&pm8953_l12>;
@@ -483,32 +501,6 @@
 
 	ts_int_sleep: ts-int-sleep-state {
 		pins = "gpio65";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
-
-	speaker_amp_default: speaker-amp-default-state {
-		pins = "gpio68";
-		function = "gpio";
-		drive-strength = <8>;
-	};
-
-	speaker_amp_sleep: speaker-amp-sleep-state {
-		pins = "gpio68";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
-
-	wlan_en_default: wlan-en-active-state {
-		pins = "gpio75";
-		function = "gpio";
-		drive-strength = <10>;
-	};
-
-	wlan_en_sleep: wlan-en-sleep-state {
-		pins = "gpio75";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
