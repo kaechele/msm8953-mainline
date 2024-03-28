@@ -237,7 +237,7 @@
 
 		reset-gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
 
-		avdd-supply = <&pm8953_l5>;
+		avdd-supply = <&pm8953_l6>;
 		vdd-supply = <&pm8953_l10>;
 
 		touchscreen-size-x = <800>;
@@ -288,9 +288,9 @@
 	model = "cd-18781y";
 
 	pinctrl-0 = <&cdc_dmic0_clk_act &cdc_dmic0_data_act
-				 &tlmm_sec_act &tlmm_pri_act &tlmm_pri_ws_act>;
+		     &tlmm_sec_act &tlmm_pri_act &tlmm_pri_ws_act>;
 	pinctrl-1 = <&cdc_dmic0_clk_sus &cdc_dmic0_data_sus
-				 &tlmm_sec_sus &tlmm_pri_sus &tlmm_pri_ws_sus>;
+		     &tlmm_sec_sus &tlmm_pri_sus &tlmm_pri_ws_sus>;
 	pinctrl-names = "default", "sleep";
 
 	audio-routing =
@@ -606,6 +606,13 @@
 		drive-strength = <2>;
 		bias-pull-down;
 	};
+};
+
+&uart_0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart_console_active>;
+
+	status = "okay";
 };
 
 &usb3 {
