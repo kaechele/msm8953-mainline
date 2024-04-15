@@ -24,15 +24,6 @@
 		mmc1 = &sdhc_2;
 	};
 
-	/* Dummy battery to make smbcharger happy */
-	battery: battery {
-		compatible = "simple-battery";
-		charge-full-design-microamp-hours = <3450000>;
-		constant-charge-current-max-microamp = <1000000>;
-		voltage-min-design-microvolt = <3400000>;
-		voltage-max-design-microvolt = <4350000>;
-	};
-
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -60,6 +51,38 @@
 			gpios = <&tlmm 85 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEUP>;
 		};
+	};
+
+	/*
+	 * We bitbang on &i2c_4 because BLSP is protected by TZ as sensors are
+	 * normally proxied via ADSP firmware. GPIOs aren't protected.
+	 */
+	 i2c-sensors {
+		compatible = "i2c-gpio";
+		sda-gpios = <&tlmm 14 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&tlmm 15 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+
+		pinctrl-0 = <&sensor_i2c_default>;
+		pinctrl-names = "default";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		/*
+		accelerometer@18 {
+			compatible = "bosch,bma253";
+			reg = <0x18>;
+
+			interrupt-parent = <&tlmm>;
+			interrupts = <42 IRQ_TYPE_EDGE_RISING>;
+			interrupt-names = "INT1";
+
+			vdd-supply = <&pm8953_l10>;
+			vddio-supply = <&pm8953_l6>;
+
+			pinctrl-0 = <&accel_int_default>;
+			pinctrl-names = "default";
+		};
+		*/
 	};
 
 	reserved-memory {
@@ -90,13 +113,11 @@
 		enable-active-high;
 	};
 
-	wlan_3v3: wlan-3v3-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "wlan_3v3";
-
-		gpio = <&tlmm 77 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		vin-supply = <&vph_pwr>;
+	usb_id: usb-id {
+		compatible = "linux,extcon-usb-gpio";
+		id-gpios = <&tlmm 5 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&usb_id_default>;
+		pinctrl-names = "default";
 	};
 
 	vph_pwr: vph-pwr-regulator {
@@ -104,6 +125,15 @@
 		regulator-name = "vph_pwr";
 		regulator-always-on;
 		regulator-boot-on;
+	};
+
+	wlan_3v3: wlan-3v3-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "wlan_3v3";
+
+		gpio = <&tlmm 77 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vph_pwr>;
 	};
 
 	/*
@@ -124,6 +154,7 @@
 	qca9379_bt: bluetooth {
 		compatible = "qcom-qca9379-bt", "qcom,qca6174-bt";
 		enable-gpios = <&tlmm 76 GPIO_ACTIVE_HIGH>;
+		clocks = <&sleep_clk>;
 	};
 };
 
@@ -264,17 +295,8 @@
 	status = "okay";
 };
 
-/* Device doesn't have a battery but requires the charger to be set up for OTG.
- * Also disable the fuel gauge to not confuse the OS with spurious battery state
- * readings.
- */
 &pmi8950_fg {
 	status = "disabled";
-};
-
-&pmi8950_smbcharger {
-	monitored-battery = <&battery>;
-	status = "okay";
 };
 
 &pmi8950_wled {
@@ -473,8 +495,10 @@
 	status = "okay";
 };
 
-/* Connected to WCBN3510A SDIO WiFi card */
 &sdhc_2 {
+	#address-cells = <1>;
+    #size-cells = <0>;
+
 	vmmc-supply = <&pm8953_l11>;
 	vqmmc-supply = <&pm8953_l12>;
 
@@ -482,9 +506,23 @@
 	non-removable;
 
 	status = "okay";
+
+	wifi@1 {
+		reg = <1>;
+		compatible = "qcom,ath10k";
+
+		qcom,ath10k-calibration-variant = "LITEON_WCBN3510A";
+	};
 };
 
 &tlmm {
+	accel_int_default: accel-int-default-state {
+		pins = "gpio42";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
 	pmx_mdss_default: pmx-mdss-default-state {
 		pins = "gpio61";
 		function = "gpio";
@@ -498,6 +536,13 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	sensor_i2c_default: sensor-i2c-default-state {
+		pins = "gpio14", "gpio15";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
 	};
 
 	ts_reset_default: ts-reset-default-state {
@@ -606,17 +651,25 @@
 		drive-strength = <2>;
 		bias-pull-down;
 	};
+
+	usb_id_default: usb-id-active-state {
+		pins = "gpio5";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 };
 
+/*
 &uart_0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
 
 	status = "okay";
 };
+*/
 
 &usb3 {
-	extcon = <&pmi8950_smbcharger>;
 	status = "okay";
 };
 
