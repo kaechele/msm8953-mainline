@@ -511,7 +511,7 @@
 		reg = <1>;
 		compatible = "qcom,ath10k";
 
-		qcom,ath10k-calibration-variant = "LITEON_WCBN3510A";
+		qcom,ath10k-calibration-variant = "WCBN3510A";
 	};
 };
 
@@ -674,8 +674,6 @@
 };
 
 &usb3_dwc3 {
-	usb-psy-name = "qcom-smbchg-usb";
-	extcon = <&pmi8950_smbcharger>;
-	vbus-supply = <&otg_vbus>;
+	extcon = <&usb_id>;
 	dr_mode = "otg";
 };
