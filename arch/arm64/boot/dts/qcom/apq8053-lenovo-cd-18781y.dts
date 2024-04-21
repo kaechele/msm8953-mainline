@@ -10,6 +10,13 @@
 #include "pmi8950.dtsi"
 
 /delete-node/ &cont_splash_mem;
+/* Remove modem related nodes, device doesn't have a modem
+ * This frees up about 116MB of memory
+ */
+/delete-node/ &mpss_mem;
+/delete-node/ &wcnss;
+/delete-node/ &wcnss_fw_mem;
+/delete-node/ &mba_mem;
 
 / {
 	model = "Lenovo ThinkView Smart";
@@ -86,6 +93,9 @@
 	};
 
 	reserved-memory {
+		/* part of modem node removal */
+		/delete-node/ rmtfs@f2d00000;
+
 		cont_splash_mem: cont-splash@90001000 {
 			reg = <0x0 0x90001000 0x0 (800 * 1280 * 3)>;
 			no-map;
@@ -113,9 +123,16 @@
 		enable-active-high;
 	};
 
+	/* USB-OTG hack
+	 * Short A5/B8 on the USB-C connector for USB ID
+	 * Default when used with regular (non-shorted) cable:
+	 * - GPIO_ACTIVE_LOW  = USB device mode
+	 * - GPIO_ACTIVE_HIGH = USB host mode
+	 * Conflicts with use of pins as UART.
+	 */
 	usb_id: usb-id {
 		compatible = "linux,extcon-usb-gpio";
-		id-gpios = <&tlmm 5 GPIO_ACTIVE_LOW>;
+		id-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&usb_id_default>;
 		pinctrl-names = "default";
 	};
@@ -256,7 +273,7 @@
 	};
 
 	hx83112b_ts: touchscreen@48 {
-		compatible = "himax,hx83112b";
+		compatible = "himax,hx83100a";
 		reg = <0x48>;
 
 		interrupt-parent = <&tlmm>;
@@ -268,7 +285,7 @@
 
 		reset-gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
 
-		avdd-supply = <&pm8953_l6>;
+		avdd-supply = <&pm8953_l5>;
 		vdd-supply = <&pm8953_l10>;
 
 		touchscreen-size-x = <800>;
@@ -283,10 +300,8 @@
 };
 
 &mpss {
-	mss-supply = <&pm8953_s1>;
-	pll-supply = <&pm8953_l7>;
-
-	status = "okay";
+	/delete-node/ mba;
+	/delete-node/ mpss;
 };
 
 &pm8953_resin {
@@ -504,6 +519,9 @@
 
 	mmc-pwrseq = <&wlan_pwrseq>;
 	non-removable;
+	wakeup-source;
+	/* Some devices experience dropouts of the WiFi module at 200 MHz */
+	max-frequency = <177000000>;
 
 	status = "okay";
 
@@ -660,14 +678,15 @@
 	};
 };
 
-/*
+/* UART broken out on USB-C on A5/B5 and A8/B8
+ * Conflicts with USB-OTG hack
+ */
 &uart_0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
 
-	status = "okay";
+	status = "disabled";
 };
-*/
 
 &usb3 {
 	status = "okay";
