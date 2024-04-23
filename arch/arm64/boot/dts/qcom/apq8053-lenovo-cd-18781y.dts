@@ -130,12 +130,6 @@
 	 * - GPIO_ACTIVE_HIGH = USB host mode
 	 * Conflicts with use of pins as UART.
 	 */
-	usb_id: usb-id {
-		compatible = "linux,extcon-usb-gpio";
-		id-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
-		pinctrl-0 = <&usb_id_default>;
-		pinctrl-names = "default";
-	};
 
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
@@ -520,7 +514,11 @@
 	mmc-pwrseq = <&wlan_pwrseq>;
 	non-removable;
 	wakeup-source;
-	/* Some devices experience dropouts of the WiFi module at 200 MHz */
+	/* Some devices experience dropouts of the WiFi module at the default of
+	 * 200 MHz. Downstream uses 177 MHz here, so we'll go with that.
+	 * Unfortunately, this comes with a drop of max throughput from ~250 Mbit/s
+	 * to ~180 Mbit/s.
+	 */
 	max-frequency = <177000000>;
 
 	status = "okay";
@@ -670,29 +668,50 @@
 		bias-pull-down;
 	};
 
+	/* Conflicts with UART usage of USB-C connector
 	usb_id_default: usb-id-active-state {
 		pins = "gpio5";
 		function = "gpio";
 		drive-strength = <2>;
-		bias-pull-down;
+		bias-pull-up;
 	};
+	*/
 };
 
 /* UART broken out on USB-C on A5/B5 and A8/B8
  * Conflicts with USB-OTG hack
  */
+
 &uart_0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
 
-	status = "disabled";
+	status = "enabled";
 };
 
 &usb3 {
 	status = "okay";
+/*
+	connector {
+		compatible = "usb-c-connector";
+
+		data-role = "dual";
+		id-gpios = <&tlmm 5 GPIO_ACTIVE_LOW>;
+
+		pinctrl-0 = <&usb_id_default>;
+		pinctrl-names = "default";
+
+		port {
+			usb_c_in: endpoint {
+				remote-endpoint = <&usb_dwc3_hs>;
+			};
+		};
+	};
+*/
 };
 
-&usb3_dwc3 {
-	extcon = <&usb_id>;
-	dr_mode = "otg";
+/*
+&usb_dwc3_hs {
+	remote-endpoint = <&usb_c_in>;
 };
+*/
