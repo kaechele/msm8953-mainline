@@ -245,7 +245,7 @@
 	status = "okay";
 
 	ft8201_ts: touchscreen@38 {
-		compatible = "edt,edt-ft8201", "edt,edt-ft5406";
+		compatible = "edt,edt-ft8201", "edt,edt-ft5506";
 		reg = <0x38>;
 
 		interrupt-parent = <&tlmm>;
