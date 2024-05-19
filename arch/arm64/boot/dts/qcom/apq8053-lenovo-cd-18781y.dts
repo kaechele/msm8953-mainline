@@ -124,12 +124,18 @@
 	};
 
 	/* USB-OTG hack
-	 * Short A5/B8 on the USB-C connector for USB ID
+	 * Pull B8 to GND on the USB-C connector for USB ID
 	 * Default when used with regular (non-shorted) cable:
-	 * - GPIO_ACTIVE_LOW  = USB device mode
-	 * - GPIO_ACTIVE_HIGH = USB host mode
+	 * - GPIO_ACTIVE_LOW  = USB host mode
+	 * - GPIO_ACTIVE_HIGH = USB device mode
 	 * Conflicts with use of pins as UART.
 	 */
+	usb_id: usb-id {
+		compatible = "linux,extcon-usb-gpio";
+		id-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&usb_id_default>;
+		pinctrl-names = "default";
+	};
 
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
@@ -266,7 +272,7 @@
 		status = "disabled";
 	};
 
-	hx83112b_ts: touchscreen@48 {
+	hx83100a_ts: touchscreen@48 {
 		compatible = "himax,hx83100a";
 		reg = <0x48>;
 
@@ -668,14 +674,13 @@
 		bias-pull-down;
 	};
 
-	/* Conflicts with UART usage of USB-C connector
+	/* Conflicts with UART usage of USB-C connector */
 	usb_id_default: usb-id-active-state {
 		pins = "gpio5";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-up;
 	};
-	*/
 };
 
 /* UART broken out on USB-C on A5/B5 and A8/B8
@@ -686,32 +691,14 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
 
-	status = "enabled";
+	status = "disabled";
 };
 
 &usb3 {
 	status = "okay";
-/*
-	connector {
-		compatible = "usb-c-connector";
-
-		data-role = "dual";
-		id-gpios = <&tlmm 5 GPIO_ACTIVE_LOW>;
-
-		pinctrl-0 = <&usb_id_default>;
-		pinctrl-names = "default";
-
-		port {
-			usb_c_in: endpoint {
-				remote-endpoint = <&usb_dwc3_hs>;
-			};
-		};
-	};
-*/
 };
 
-/*
-&usb_dwc3_hs {
-	remote-endpoint = <&usb_c_in>;
+&usb3_dwc3 {
+	extcon = <&usb_id>;
+	dr_mode = "otg";
 };
-*/
