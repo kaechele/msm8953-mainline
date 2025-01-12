@@ -57,6 +57,11 @@
 			label = "Volume Up";
 			gpios = <&tlmm 85 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEUP>;
+			/* The device only has a Volume Up and a Volume Down key.
+			 * We define them as a wakeup-source, so the user can
+			 * use them to wake the device.
+			 */
+			wakeup-source;
 		};
 	};
 
@@ -309,8 +314,16 @@
 	/delete-node/ mpss;
 };
 
+&pm8953_pon {
+	/* Device doesn't have a power key */
+	pwrkey {
+		status = "disabled";
+	};
+};
+
 &pm8953_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
+	wakeup-source;
 
 	status = "okay";
 };
@@ -717,4 +730,8 @@
 
 &usb3_dwc3 {
 	dr_mode = "otg";
+};
+
+&zap_shader {
+	firmware-name = "qcom/msm8953/lenovo/cd-18781y/a506_zap.mdt";
 };
