@@ -455,7 +455,7 @@
 
 &wcnss {
 	status = "okay";
-
+	firmware-name = "qcom/msm8953/motorola/potter/WCNSS_qcom_wlan_nv.bin";
 	vddpx-supply = <&pm8953_l5>;
 };
 
